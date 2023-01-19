@@ -13,7 +13,7 @@ app.get("/", (req, res) => {
   res.send("Hello from PluggedIn Server");
 });
 
-const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@pluggedin.lv6yqjw.mongodb.net/?retryWrites=true&w=majority`;
+const uri = `mongodb+srv://pluggedindbuser:TrczA0CRtNVqXbzL@pluggedin.lv6yqjw.mongodb.net/?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
@@ -46,6 +46,13 @@ async function run() {
       }
       const result = await recordsCollection.insertOne(media);
       res.send(result);
+    });
+
+    app.get("/userMedia", async (req, res) => {
+      const email = req.query.email;
+      const query = { authorEmail: email };
+      const medias = await recordsCollection.find(query).toArray();
+      res.send(medias);
     });
   } finally {
   }
