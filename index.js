@@ -66,7 +66,7 @@ async function run() {
       const editiongMedia = req.body;
 
       const option = { upsert: true };
-      const filter = { _id: ObjectId(editiongMedia) };
+      const filter = { _id: ObjectId(editiongMedia._id) };
       const updatedDoc = {
         $set: {
           title: editiongMedia.title,
