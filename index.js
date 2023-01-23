@@ -61,6 +61,27 @@ async function run() {
       const result = await recordsCollection.deleteOne(query);
       res.send(result);
     });
+
+    app.put("/record", async (req, res) => {
+      const editiongMedia = req.body;
+
+      const option = { upsert: true };
+      const filter = { _id: ObjectId(editiongMedia) };
+      const updatedDoc = {
+        $set: {
+          title: editiongMedia.title,
+          details: editiongMedia.details,
+        },
+      };
+
+      const result = await recordsCollection.updateOne(
+        filter,
+        updatedDoc,
+        option
+      );
+
+      res.send(result);
+    });
   } finally {
   }
 }
