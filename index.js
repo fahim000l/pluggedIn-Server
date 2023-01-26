@@ -24,6 +24,7 @@ async function run() {
     try {
         const usersCollection = client.db("pluggedIn").collection("users");
         const recordsCollection = client.db("pluggedIn").collection("records");
+        const reviewsCollection = client.db("pluggedIn").collection("reviews");
 
         app.post("/users", async (req, res) => {
             const user = req.body;
@@ -80,6 +81,18 @@ async function run() {
             const result = await recordsCollection.updateOne(filter, updatedDoc, option);
 
             res.send(result);
+        });
+
+        // Post & Get Reviews
+        app.post("/reviews", async (req, res) => {
+            const review = req.body;
+            const result = await reviewsCollection.insertOne(review);
+            res.send(result);
+        });
+
+        app.get("/reviews", async (req, res) => {
+            const reviews = await reviewsCollection.find({}).toArray();
+            res.send(reviews);
         });
     } finally {
     }
