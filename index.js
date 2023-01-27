@@ -116,9 +116,9 @@ async function run() {
             res.send(result);
         });
 
-        app.get("/tasks", async (req, res) => {
-            const record = req.body;
-            const tasks = await tasksCollection.find({ record_id: ObjectId(record._id) }).toArray();
+        app.get("/tasks/:id", async (req, res) => {
+            const { id } = req.params;
+            const tasks = await tasksCollection.find({ record_id: ObjectId(id) }).toArray();
             res.send(tasks);
         });
 
