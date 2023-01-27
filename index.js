@@ -99,11 +99,13 @@ async function run() {
         // Post, Put, Get, Delete Tasks
         app.put("/task/:id", async (req, res) => {
             const { id } = req.params;
-            const details = req.body;
+            const task = req.body;
             const option = { upsert: true };
             const filter = { _id: ObjectId(id) };
             const updatedDoc = {
-                $set: { details },
+                $set: {
+                    done: task.done,
+                },
             };
             const result = await tasksCollection.updateOne(filter, updatedDoc, option);
             res.send(result);
