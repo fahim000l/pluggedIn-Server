@@ -97,14 +97,13 @@ async function run() {
         });
 
         // Post, Put, Get, Delete Tasks
-        app.put("/task", async (req, res) => {
-            const editionsTask = req.body;
+        app.put("/task/:id", async (req, res) => {
+            const { id } = req.params;
+            const details = req.body;
             const option = { upsert: true };
-            const filter = { _id: ObjectId(editionsTask._id) };
+            const filter = { _id: ObjectId(id) };
             const updatedDoc = {
-                $set: {
-                    details: editionsTask.title,
-                },
+                $set: { details },
             };
             const result = await tasksCollection.updateOne(filter, updatedDoc, option);
             res.send(result);
@@ -118,7 +117,7 @@ async function run() {
 
         app.get("/tasks/:id", async (req, res) => {
             const { id } = req.params;
-            const tasks = await tasksCollection.find({ record_id: ObjectId(id) }).toArray();
+            const tasks = await tasksCollection.find({ media_id: id }).toArray();
             res.send(tasks);
         });
 
