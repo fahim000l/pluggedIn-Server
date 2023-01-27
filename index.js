@@ -25,6 +25,7 @@ async function run() {
         const usersCollection = client.db("pluggedIn").collection("users");
         const recordsCollection = client.db("pluggedIn").collection("records");
         const reviewsCollection = client.db("pluggedIn").collection("reviews");
+        const tasksCollection = client.db("pluggedIn").collection("tasks");
 
         app.post("/users", async (req, res) => {
             const user = req.body;
@@ -93,6 +94,39 @@ async function run() {
         app.get("/reviews", async (req, res) => {
             const reviews = await reviewsCollection.find({}).toArray();
             res.send(reviews);
+        });
+
+        // Post, Put, Get, Delete Tasks
+        app.put("/task", async (req, res) => {
+            const editionsTask = req.body;
+            const option = { upsert: true };
+            const filter = { _id: ObjectId(editionsTask._id) };
+            const updatedDoc = {
+                $set: {
+                    details: editionsTask.title,
+                },
+            };
+            const result = await tasksCollection.updateOne(filter, updatedDoc, option);
+            res.send(result);
+        });
+
+        app.post("/task", async (req, res) => {
+            const task = req.body;
+            const result = await tasksCollection.insertOne(task);
+            res.send(result);
+        });
+
+        app.get("/tasks/:id", async (req, res) => {
+            const { id } = req.params;
+            const tasks = await tasksCollection.find({ record_id: ObjectId(id) }).toArray();
+            res.send(tasks);
+        });
+
+        app.delete("/task/:id", async (req, res) => {
+            const { id } = req.params;
+            const query = { _id: ObjectId(id) };
+            const result = await tasksCollection.deleteOne(query);
+            res.send(result);
         });
     } finally {
     }
