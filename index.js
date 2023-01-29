@@ -54,29 +54,20 @@ async function run() {
             next();
         };
 
-        // Save User To DB , Generate & Sent JWT Token to site
-        app.put("/user/:email", async (req, res) => {
-            const { email } = req.params;
+        app.post("/users", async (req, res) => {
             const user = req.body;
-            const filter = { email: email };
-            const options = { upsert: true };
-            const updateDoc = {
-                $set: user,
-            };
-            const result = await usersCollection.updateOne(filter, updateDoc, options);
-            const token = jwt.sign(user, process.env.ACC_Token, {
-                expiresIn: "2d",
-            });
-            res.send({ result, token });
+            const query = { email: user.email };
+            const alreadyInserted = await usersCollection.findOne(query);
+            if (alreadyInserted) {
+                return res.send({ message: "User Already Exists" });
+            }
+            const result = await usersCollection.insertOne(user);
+            res.send(result);
         });
 
         // Get The User By Email
-        app.get("/user/:email", verifyJWT, async (req, res) => {
+        app.get("/user/:email", async (req, res) => {
             const { email } = req.params;
-            const decodedEmail = req.decoded.email;
-            if (email !== decodedEmail) {
-                return res.status(403).send({ message: "Forbidden Access" });
-            }
             const query = { email: email };
             const user = await usersCollection.findOne(query);
             res.send(user);
