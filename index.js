@@ -54,19 +54,22 @@ async function run() {
             next();
         };
 
-        app.post("/users", async (req, res) => {
+        app.put("/user", async (req, res) => {
             const user = req.body;
-            const query = { email: user.email };
-            const alreadyInserted = await usersCollection.findOne(query);
-            if (alreadyInserted) {
-                return res.send({ message: "User Already Exists" });
-            }
-            const result = await usersCollection.insertOne(user);
-            res.send(result);
+            const option = { upsert: true };
+            const filter = { email: user.email };
+            const updatedDoc = {
+                $set: user,
+            };
+            const result = await usersCollection.updateOne(filter, updatedDoc, option);
+            const token = jwt.sign(user, process.env.ACC_Token, {
+                expiresIn: "2d",
+            });
+            res.send({ result, token });
         });
 
         // Get The User By Email
-        app.get("/user/:email", async (req, res) => {
+        app.get("/user/:email", verifyJWT, async (req, res) => {
             const { email } = req.params;
             const query = { email: email };
             const user = await usersCollection.findOne(query);
