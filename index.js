@@ -57,14 +57,14 @@ async function run() {
         app.post("/user", async (req, res) => {
             const user = req.body;
             const filter = { email: user.email };
-            const alreadyInserted = await usersCollection.findOne(filter);
-            if (alreadyInserted) {
-                return res.send({ message: "User Already Exists" });
-            }
-            const result = await usersCollection.insertOne(user);
             const token = jwt.sign(user, process.env.ACC_Token, {
                 expiresIn: "2d",
             });
+            const alreadyInserted = await usersCollection.findOne(filter);
+            if (alreadyInserted) {
+                return res.send({ result: { message: "User Already Exists" }, token });
+            }
+            const result = await usersCollection.insertOne(user);
             res.send({ result, token });
         });
 
