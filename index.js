@@ -79,7 +79,7 @@ async function run() {
         });
 
         // Get The User By Email
-        app.get("/user/:email", verifyJWT, async (req, res) => {
+        app.get("/user/:email", async (req, res) => {
             const { email } = req.params;
             const query = { email: email };
             const user = await usersCollection.findOne(query);
