@@ -78,6 +78,18 @@ async function run() {
             }
         });
 
+        // Get all user
+        app.get("/users", verifyJWT, async (req, res) => {
+            const { role } = req.query;
+            if (role) {
+                const users = await usersCollection.find({ role: role }).toArray();
+                res.send(users);
+            } else {
+                const users = await usersCollection.find({}).toArray();
+                res.send(users);
+            }
+        });
+
         // Get The User By Email
         app.get("/user/:email", async (req, res) => {
             const { email } = req.params;
