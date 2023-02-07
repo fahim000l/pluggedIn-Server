@@ -47,6 +47,7 @@ function verifyJWT(req, res, next) {
 }
 
 async function run() {
+
   try {
     const usersCollection = client.db("pluggedIn").collection("users");
     const recordsCollection = client.db("pluggedIn").collection("records");
@@ -451,6 +452,7 @@ async function run() {
     });
   } finally {
   }
+
 }
 
 run().catch((err) => {
