@@ -53,6 +53,7 @@ async function run() {
     const recordsCollection = client.db("pluggedIn").collection("records");
     const reviewsCollection = client.db("pluggedIn").collection("reviews");
     const tasksCollection = client.db("pluggedIn").collection("tasks");
+    const roomsCollection = client.db("pluggedIn").collection("rooms");
 
     // Verify Admin
     const verifyAdmin = async (req, res, next) => {
@@ -257,12 +258,18 @@ async function run() {
       };
       const updateSenderFriendList = {
         $push: {
-          friendList: receiver,
+          friendList: {
+            email: receiver?.email,
+            room: `${receiver?.email}_${sender?.email}`,
+          },
         },
       };
       const updateReceiverFriendList = {
         $push: {
-          friendList: sender,
+          friendList: {
+            email: sender?.email,
+            room: `${receiver?.email}_${sender?.email}`,
+          },
         },
       };
 
@@ -276,8 +283,6 @@ async function run() {
         updateFriendRequestList,
         option
       );
-      sender.room = `${receiver?.email}_${sender?.email}`;
-      receiver.room = `${receiver?.email}_${sender?.email}`;
       const senderFriendListResult = await usersCollection.updateOne(
         findSender,
         updateSenderFriendList,
@@ -328,6 +333,35 @@ async function run() {
       res.send({ sendingResult, receivingResult });
     });
 
+    app.put("/disconnect", async (req, res) => {
+      const friend = req.body.friend;
+      const user = req.body.user;
+      const findUser = { email: user?.email };
+      const findFriend = { email: friend?.email };
+      const option = { upsert: true };
+      const disconnectingFriendCoc = {
+        $pull: {
+          friendList: friend,
+        },
+      };
+      const disconnectingUserDoc = {
+        $pull: {
+          friendList: user,
+        },
+      };
+      const friendDisconnectingResult = await usersCollection.updateOne(
+        findUser,
+        disconnectingFriendCoc,
+        option
+      );
+      const userDisconnectingResult = await usersCollection.updateOne(
+        findFriend,
+        disconnectingUserDoc,
+        option
+      );
+      res.send({ friendDisconnectingResult, userDisconnectingResult });
+    });
+
     app.get("/isPending", async (req, res) => {
       const userEmail = req.query.userEmail;
       const pendingUserEmail = req.query.pendingUserEmail;
@@ -346,6 +380,21 @@ async function run() {
       }
     });
 
+    app.get("/isFriend", async (req, res) => {
+      const userEmail = req.query.userEmail;
+      const friendUserEmail = req.query.friendUserEmail;
+      const query = { email: userEmail };
+      const user = await usersCollection.findOne(query);
+      const isFriend = user?.friendList?.find(
+        (item) => item.email === friendUserEmail
+      );
+      if (isFriend) {
+        res.send({ status: "friend" });
+      } else {
+        res.send({ status: "not_friend" });
+      }
+    });
+
     app.get("/connectionrequests", async (req, res) => {
       const userEmail = req.query.email;
       const query = { email: userEmail };
@@ -361,6 +410,46 @@ async function run() {
       const friens = user?.friendList;
       res.send(friens);
     });
+
+    app.post("/makeRoom", async (req, res) => {
+      const roomData = req.body;
+      const result = await roomsCollection.insertOne(roomData);
+      res.send(result);
+    });
+
+    app.delete("/deleteRoom", async (req, res) => {
+      const roomName = req.query.roomName;
+      const query = { roomName };
+      const result = await roomsCollection.deleteOne(query);
+      res.send(result);
+    });
+
+    app.put("/messageStore", async (req, res) => {
+      const messageData = req.body;
+      const findRoom = { roomName: messageData?.roomName };
+      const option = { upsert: true };
+      const roomDoc = {
+        $push: {
+          messages: messageData,
+        },
+      };
+      const result = await roomsCollection.updateOne(findRoom, roomDoc, option);
+      res.send(result);
+    });
+
+    app.get("/getMessages", async (req, res) => {
+      const roomName = req.query.roomName;
+      const query = { roomName };
+      const room = await roomsCollection.findOne(query);
+      const messages = room?.messages;
+      res.send(messages);
+    });
+
+    app.get("/getRooms", async (req, res) => {
+      const query = {};
+      const rooms = await roomsCollection.find(query).toArray();
+      res.send(rooms);
+    });
   } finally {
   }
 
@@ -372,6 +461,14 @@ run().catch((err) => {
 
 io.on("connection", (socket) => {
   console.log("user connected with id:", socket.id);
+  socket.on("join_room", (data) => {
+    console.log(data);
+    socket.join(data);
+  });
+  socket.on("send_message", (data) => {
+    console.log(data);
+    socket.to(data.roomName).emit("receive_message", data);
+  });
 });
 
 server.listen(port, () => {
