@@ -49,6 +49,7 @@ function verifyJWT(req, res, next) {
 async function run() {
     try {
         const usersCollection = client.db("pluggedIn").collection("users");
+        const teamsCollection = client.db("pluggedIn").collection("teams");
         const recordsCollection = client.db("pluggedIn").collection("records");
         const reviewsCollection = client.db("pluggedIn").collection("reviews");
         const tasksCollection = client.db("pluggedIn").collection("tasks");
@@ -107,6 +108,24 @@ async function run() {
             const query = { email: email };
             const user = await usersCollection.findOne(query);
             res.send(user);
+        });
+
+        // Insert & Update Team
+        app.put("/team/:email", async (req, res) => {
+            const { email } = req.params;
+            const team_data = req.body;
+            const option = { upsert: true };
+            const filter = { leader_mail: email };
+            const updatedDoc = { $set: team_data };
+            const result = await teamsCollection.updateOne(filter, updatedDoc, option);
+            res.send(result);
+        });
+
+        // Get Team
+        app.get("/team/:email", async (req, res) => {
+            const { email } = req.params;
+            const team = await teamsCollection.findOne({ leader_mail: email });
+            res.send(team);
         });
 
         app.post("/userRecords", async (req, res) => {
