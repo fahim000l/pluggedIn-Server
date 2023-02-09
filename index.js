@@ -113,8 +113,9 @@ async function run() {
         // Insert a team
         app.post("/team", async (req, res) => {
             const team = req.body;
-            const alreadyExist = await teamsCollection.findOne({ name: team.name });
-            if (alreadyExist && alreadyExist.leader_mail === team.leader_mail) {
+            const alreadyExist = await teamsCollection.find({ name: team.name }).toArray();
+            const existTeams = alreadyExist.filter((existTeam) => existTeam.leader === team.leader);
+            if (existTeams.length !== 0) {
                 return res.send({ acknowledged: false, message: "Your Team already Exist" });
             }
             const result = await teamsCollection.insertOne(team);
@@ -124,7 +125,7 @@ async function run() {
         //  Update Team Data
         app.patch("/team/:email", async (req, res) => {
             const { email } = req.params;
-            const query = { leader_mail: email };
+            const query = { leader: email };
             const result = await teamsCollection.updateOne(query, { $set: req.body });
             res.send(result);
         });
@@ -132,7 +133,7 @@ async function run() {
         // Get Team
         app.get("/team/:email", async (req, res) => {
             const { email } = req.params;
-            const team = await teamsCollection.findOne({ leader_mail: email });
+            const team = await teamsCollection.findOne({ leader: email });
             res.send(team);
         });
 
