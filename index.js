@@ -47,7 +47,6 @@ function verifyJWT(req, res, next) {
 }
 
 async function run() {
-
   try {
     const usersCollection = client.db("pluggedIn").collection("users");
     const recordsCollection = client.db("pluggedIn").collection("records");
@@ -452,7 +451,6 @@ async function run() {
     });
   } finally {
   }
-
 }
 
 run().catch((err) => {
@@ -465,6 +463,12 @@ io.on("connection", (socket) => {
     console.log(data);
     socket.join(data);
   });
+
+  socket.on("typing", (data) => {
+    console.log(data);
+    socket.broadcast.emit("typing_res", data);
+  });
+
   socket.on("send_message", (data) => {
     console.log(data);
     socket.to(data.roomName).emit("receive_message", data);
