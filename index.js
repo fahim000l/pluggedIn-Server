@@ -14,36 +14,36 @@ app.use(express.json());
 
 const server = http.createServer(app);
 const io = new Server(server, {
-  cors: {
-    origin: "*",
-    methods: ["GET", "POST"],
-  },
+    cors: {
+        origin: "*",
+        methods: ["GET", "POST"],
+    },
 });
 
 app.get("/", (req, res) => {
-  res.send("Hello from PluggedIn Server");
+    res.send("Hello from PluggedIn Server");
 });
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@pluggedin.lv6yqjw.mongodb.net/?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-  serverApi: ServerApiVersion.v1,
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+    serverApi: ServerApiVersion.v1,
 });
 
 function verifyJWT(req, res, next) {
-  const authHeader = req.headers.authorization;
-  if (!authHeader) {
-    return res.status(401).send({ message: "Unauthorized Access" });
-  }
-  const token = authHeader.split(" ")[1];
-  jwt.verify(token, process.env.ACC_Token, function (err, decoded) {
-    if (err) {
-      return res.status(403).send({ message: "Forbidden Access" });
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+        return res.status(401).send({ message: "Unauthorized Access" });
     }
-    req.decoded = decoded;
-    next();
-  });
+    const token = authHeader.split(" ")[1];
+    jwt.verify(token, process.env.ACC_Token, function (err, decoded) {
+        if (err) {
+            return res.status(403).send({ message: "Forbidden Access" });
+        }
+        req.decoded = decoded;
+        next();
+    });
 }
 
 async function run() {
@@ -454,10 +454,11 @@ async function run() {
 }
 
 run().catch((err) => {
-  console.error(err);
+    console.error(err);
 });
 
 io.on("connection", (socket) => {
+
   console.log("user connected with id:", socket.id);
   socket.on("join_room", (data) => {
     console.log(data);
@@ -473,8 +474,9 @@ io.on("connection", (socket) => {
     console.log(data);
     socket.to(data.roomName).emit("receive_message", data);
   });
+
 });
 
 server.listen(port, () => {
-  console.log("PluggedIn server is running on port :", port);
+    console.log("PluggedIn server is running on port :", port);
 });
