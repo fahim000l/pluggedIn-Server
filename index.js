@@ -110,14 +110,22 @@ async function run() {
             res.send(user);
         });
 
-        // Insert & Update Team
-        app.put("/team/:email", async (req, res) => {
+        // Insert a team
+        app.post("/team", async (req, res) => {
+            const team = req.body;
+            const alreadyExist = await teamsCollection.findOne({ name: team.name });
+            if (alreadyExist && alreadyExist.leader_mail === team.leader_mail) {
+                return res.send({ acknowledged: false, message: "Your Team already Exist" });
+            }
+            const result = await teamsCollection.insertOne(team);
+            res.send(result);
+        });
+
+        //  Update Team Data
+        app.patch("/team/:email", async (req, res) => {
             const { email } = req.params;
-            const team_data = req.body;
-            const option = { upsert: true };
-            const filter = { leader_mail: email };
-            const updatedDoc = { $set: team_data };
-            const result = await teamsCollection.updateOne(filter, updatedDoc, option);
+            const query = { leader_mail: email };
+            const result = await teamsCollection.updateOne(query, { $set: req.body });
             res.send(result);
         });
 
