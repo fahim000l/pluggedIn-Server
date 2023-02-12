@@ -476,6 +476,8 @@ async function run() {
       const query = { roomName };
       const room = await roomsCollection.findOne(query);
       const messages = room?.messages;
+      console.log(room);
+      console.log(messages);
       res.send(messages);
     });
 
@@ -483,6 +485,33 @@ async function run() {
       const query = {};
       const rooms = await roomsCollection.find(query).toArray();
       res.send(rooms);
+    });
+
+    app.put("/addRoomMate", async (req, res) => {
+      const memberEmail = req.body.memberEmail;
+      const roomName = req.body.roomName;
+      const filter = { roomName };
+      const option = { upsert: true };
+      const room = await roomsCollection.find(filter);
+      const members = room.members;
+      const isExist = members?.find(memberEmail);
+      console.log(isExist, members, room);
+      if (!isExist) {
+        const updatedDoc = {
+          $push: {
+            members: memberEmail,
+          },
+        };
+        const result = await roomsCollection.updateOne(
+          filter,
+          updatedDoc,
+          option
+        );
+
+        res.send(result);
+      } else {
+        res.send({ message: "alreadyExist" });
+      }
     });
   } finally {
   }
