@@ -32,18 +32,18 @@ const client = new MongoClient(uri, {
 });
 
 function verifyJWT(req, res, next) {
-  const authHeader = req.headers.authorization;
-  if (!authHeader) {
-    return res.status(401).send({ message: "Unauthorized Access" });
-  }
-  const token = authHeader.split(" ")[1];
-  jwt.verify(token, process.env.ACC_Token, function (err, decoded) {
-    if (err) {
-      return res.status(403).send({ message: "Forbidden Access" });
-    }
-    req.decoded = decoded;
-    next();
-  });
+  // const authHeader = req.headers.authorization;
+  // if (!authHeader) {
+  //   return res.status(401).send({ message: "Unauthorized Access" });
+  // }
+  // const token = authHeader.split(" ")[1];
+  // jwt.verify(token, process.env.ACC_Token, function (err, decoded) {
+  //   if (err) {
+  //     return res.status(403).send({ message: "Forbidden Access" });
+  //   }
+  //   req.decoded = decoded;
+  next();
+  // });
 }
 
 async function run() {
@@ -429,6 +429,21 @@ async function run() {
       }
     });
 
+    app.get("/isRequested", async (req, res) => {
+      const userEmail = req.query.userEmail;
+      const requestUserEmail = req.query.friendUserEmail;
+      const query = { email: userEmail };
+      const user = await usersCollection.findOne(query);
+      const isRequested = user?.friendRequestList?.find(
+        (item) => item.email === requestUserEmail
+      );
+      if (isRequested) {
+        res.send({ status: "requested" });
+      } else {
+        res.send({ status: "not_requested" });
+      }
+    });
+
     app.get("/connectionrequests", async (req, res) => {
       const userEmail = req.query.email;
       const query = { email: userEmail };
@@ -476,8 +491,6 @@ async function run() {
       const query = { roomName };
       const room = await roomsCollection.findOne(query);
       const messages = room?.messages;
-      console.log(room);
-      console.log(messages);
       res.send(messages);
     });
 
@@ -487,31 +500,50 @@ async function run() {
       res.send(rooms);
     });
 
+    app.get("/singleRoom", async (req, res) => {
+      const roomName = req.query.roomName;
+      const query = { roomName };
+      const room = await roomsCollection.findOne(query);
+      res.send(room);
+    });
+
     app.put("/addRoomMate", async (req, res) => {
       const memberEmail = req.body.memberEmail;
       const roomName = req.body.roomName;
       const filter = { roomName };
       const option = { upsert: true };
-      const room = await roomsCollection.find(filter);
-      const members = room.members;
-      const isExist = members?.find(memberEmail);
-      console.log(isExist, members, room);
-      if (!isExist) {
-        const updatedDoc = {
-          $push: {
-            members: memberEmail,
-          },
-        };
-        const result = await roomsCollection.updateOne(
-          filter,
-          updatedDoc,
-          option
-        );
+      const updatedDoc = {
+        $push: {
+          members: memberEmail,
+        },
+      };
+      const result = await roomsCollection.updateOne(
+        filter,
+        updatedDoc,
+        option
+      );
 
-        res.send(result);
-      } else {
-        res.send({ message: "alreadyExist" });
-      }
+      res.send(result);
+    });
+
+    app.put("/deleteRoomMate", async (req, res) => {
+      const memberEmail = req.body.memberEmail;
+      const roomName = req.body.roomName;
+      console.log("deleting user & room", roomName, memberEmail);
+      const filter = { roomName };
+      const option = { upsert: true };
+      const updatedDoc = {
+        $pull: {
+          members: memberEmail,
+        },
+      };
+      const result = await roomsCollection.updateOne(
+        filter,
+        updatedDoc,
+        option
+      );
+
+      res.send(result);
     });
   } finally {
   }
