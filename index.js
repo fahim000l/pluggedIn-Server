@@ -42,7 +42,7 @@ function verifyJWT(req, res, next) {
   //     return res.status(403).send({ message: "Forbidden Access" });
   //   }
   //   req.decoded = decoded;
-    next();
+  next();
   // });
 }
 
@@ -169,6 +169,13 @@ async function run() {
       res.send(media);
     });
 
+    app.get("/media", async (req, res) => {
+      const userEmail = req.query.email;
+      const query = { authorEmail: userEmail };
+      const records = await recordsCollection.find(query).toArray();
+      res.send(records);
+    });
+
     app.delete("/record/:id", async (req, res) => {
       const recordId = req.params.id;
       const query = { _id: ObjectId(recordId) };
@@ -183,6 +190,7 @@ async function run() {
       const updatedDoc = {
         $set: {
           title: editionsMedia.title,
+          teamName: editionsMedia.teamName,
         },
       };
       const result = await recordsCollection.updateOne(
@@ -538,6 +546,41 @@ async function run() {
         },
       };
       const result = await roomsCollection.updateOne(
+        filter,
+        updatedDoc,
+        option
+      );
+
+      res.send(result);
+    });
+
+    app.get("/teamByUser", async (req, res) => {
+      const email = req.query.email;
+      const query = { email };
+      const user = await usersCollection.findOne(query);
+      const teams = user?.team;
+      res.send(teams);
+    });
+
+    app.get("/taskByUser", async (req, res) => {
+      const user = req.query.email;
+      const query = { assignedTo: user };
+      const tasks = await tasksCollection.find(query).toArray();
+      res.send(tasks);
+    });
+
+    app.put("/giveRward", async (req, res) => {
+      const id = req.query.id;
+      const reward = req.body.reward;
+      const filter = { _id: ObjectId(id) };
+      const option = { upsert: true };
+      const updatedDoc = {
+        $set: {
+          givenReward: reward,
+        },
+      };
+
+      const result = await tasksCollection.updateOne(
         filter,
         updatedDoc,
         option
