@@ -611,12 +611,12 @@ io.on("connection", (socket) => {
 
   socket.on("send_message", (data) => {
     console.log(data);
-    socket.to(data.roomName).emit("receive_message", data);
+    socket.to(data?.roomName).emit("receive_message", data);
   });
 
   socket.on("send_file", (data) => {
     console.log(data);
-    socket.broadcast.emit("receive_file", data);
+    socket.to(data?.roomName).emit("receive_file", data);
   });
 });
 
