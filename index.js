@@ -618,6 +618,16 @@ io.on("connection", (socket) => {
     console.log(data);
     socket.to(data?.roomName).emit("receive_file", data);
   });
+
+  socket.on("send_peerid", (data) => {
+    console.log(data);
+    socket.broadcast.emit("receive_peerid", data);
+  });
+
+  socket.on("call_end", (data) => {
+    console.log(data);
+    socket.broadcast.to(data?.room).emit("end_call", data);
+  });
 });
 
 server.listen(port, () => {
