@@ -52,6 +52,7 @@ async function run() {
         const teamsCollection = client.db("pluggedIn").collection("teams");
         const recordsCollection = client.db("pluggedIn").collection("records");
         const reviewsCollection = client.db("pluggedIn").collection("reviews");
+        const blogsCollection = client.db("pluggedIn").collection("blogs");
         const tasksCollection = client.db("pluggedIn").collection("tasks");
         const roomsCollection = client.db("pluggedIn").collection("rooms");
 
@@ -195,6 +196,18 @@ async function run() {
 
         app.get("/reviews", async (req, res) => {
             const reviews = await reviewsCollection.find({}).toArray();
+            res.send(reviews);
+        });
+
+        // Post & Blogs
+        app.post("/blogs", async (req, res) => {
+            const review = req.body;
+            const result = await blogsCollection.insertOne(review);
+            res.send(result);
+        });
+
+        app.get("/blogs", async (req, res) => {
+            const reviews = await blogsCollection.find({}).toArray();
             res.send(reviews);
         });
 
