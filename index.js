@@ -541,26 +541,36 @@ run().catch((err) => {
 });
 
 io.on("connection", (socket) => {
-    console.log("user connected with id:", socket.id);
-    socket.on("join_room", (data) => {
-        console.log(data);
-        socket.join(data);
-    });
+  console.log("user connected with id:", socket.id);
+  socket.on("join_room", (data) => {
+    console.log(data);
+    socket.join(data);
+  });
 
-    socket.on("typing", (data) => {
-        console.log(data);
-        socket.broadcast.emit("typing_res", data);
-    });
+  socket.on("typing", (data) => {
+    console.log(data);
+    socket.broadcast.emit("typing_res", data);
+  });
 
-    socket.on("send_message", (data) => {
-        console.log(data);
-        socket.to(data?.roomName).emit("receive_message", data);
-    });
+  socket.on("send_message", (data) => {
+    console.log(data);
+    socket.to(data?.roomName).emit("receive_message", data);
+  });
 
-    socket.on("send_file", (data) => {
-        console.log(data);
-        socket.to(data?.roomName).emit("receive_file", data);
-    });
+  socket.on("send_file", (data) => {
+    console.log(data);
+    socket.to(data?.roomName).emit("receive_file", data);
+  });
+
+  socket.on("send_peerid", (data) => {
+    console.log(data);
+    socket.broadcast.emit("receive_peerid", data);
+  });
+
+  socket.on("call_end", (data) => {
+    console.log(data);
+    socket.broadcast.to(data?.room).emit("end_call", data);
+  });
 });
 
 server.listen(port, () => {
