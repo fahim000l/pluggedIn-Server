@@ -220,6 +220,21 @@ async function run() {
             res.send(blogs);
         });
 
+        app.get("/blog/:id", async (req, res) => {
+            const { id } = req.params;
+            const query = { _id: ObjectId(id) };
+            const blog = await blogsCollection.findOne(query);
+            res.send(blog);
+        });
+
+        app.patch("/blog/:id", async (req, res) => {
+            const { id } = req.params;
+            const query = { _id: ObjectId(id) };
+            const result = await blogsCollection.updateOne(query, { $set: req.body });
+            res.send(result);
+        });
+        // Blog End
+
         // Post, Put, Get, Delete Tasks
         app.put("/task/:id", async (req, res) => {
             const { id } = req.params;
@@ -322,7 +337,7 @@ async function run() {
             });
         });
 
-        app.put("/calcelConnect", async (req, res) => {
+        app.put("/cancelConnect", async (req, res) => {
             const sender = req.body.sender;
             const receiver = req.body.receiver;
             const findSender = { email: sender.email };
@@ -420,8 +435,8 @@ async function run() {
             const email = req.query.email;
             const query = { email };
             const user = await usersCollection.findOne(query);
-            const friens = user?.friendList;
-            res.send(friens);
+            const friends = user?.friendList;
+            res.send(friends);
         });
 
         app.post("/makeRoom", async (req, res) => {
@@ -517,7 +532,7 @@ async function run() {
             res.send(tasks);
         });
 
-        app.put("/giveRward", async (req, res) => {
+        app.put("/giveReward", async (req, res) => {
             const id = req.query.id;
             const reward = req.body.reward;
             const filter = { _id: ObjectId(id) };
@@ -541,36 +556,36 @@ run().catch((err) => {
 });
 
 io.on("connection", (socket) => {
-  console.log("user connected with id:", socket.id);
-  socket.on("join_room", (data) => {
-    console.log(data);
-    socket.join(data);
-  });
+    console.log("user connected with id:", socket.id);
+    socket.on("join_room", (data) => {
+        console.log(data);
+        socket.join(data);
+    });
 
-  socket.on("typing", (data) => {
-    console.log(data);
-    socket.broadcast.emit("typing_res", data);
-  });
+    socket.on("typing", (data) => {
+        console.log(data);
+        socket.broadcast.emit("typing_res", data);
+    });
 
-  socket.on("send_message", (data) => {
-    console.log(data);
-    socket.to(data?.roomName).emit("receive_message", data);
-  });
+    socket.on("send_message", (data) => {
+        console.log(data);
+        socket.to(data?.roomName).emit("receive_message", data);
+    });
 
-  socket.on("send_file", (data) => {
-    console.log(data);
-    socket.to(data?.roomName).emit("receive_file", data);
-  });
+    socket.on("send_file", (data) => {
+        console.log(data);
+        socket.to(data?.roomName).emit("receive_file", data);
+    });
 
-  socket.on("send_peerid", (data) => {
-    console.log(data);
-    socket.broadcast.emit("receive_peerid", data);
-  });
+    socket.on("send_peerid", (data) => {
+        console.log(data);
+        socket.broadcast.emit("receive_peerid", data);
+    });
 
-  socket.on("call_end", (data) => {
-    console.log(data);
-    socket.broadcast.to(data?.room).emit("end_call", data);
-  });
+    socket.on("call_end", (data) => {
+        console.log(data);
+        socket.broadcast.to(data?.room).emit("end_call", data);
+    });
 });
 
 server.listen(port, () => {
